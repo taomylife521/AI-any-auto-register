@@ -8,9 +8,9 @@
 
 ## 功能特性
 
-- **多平台支持**：Trae.ai、Tavily、Cursor、Kiro、ChatGPT、OpenBlockLabs，支持自定义插件扩展
-- **多邮箱服务**：MoeMail（自建）、Laoudo、DuckMail、Testmail、Cloudflare Worker 自建邮箱
-- **多执行模式**：API 协议（无浏览器）、无头浏览器（待实现）、有头浏览器（待实现）（各平台按需支持）
+- **多平台支持**：ChatGPT、Cursor、Kiro、Trae.ai、Tavily、Grok、Blink、OpenBlockLabs，支持自定义插件扩展（Anything 通用适配器）
+- **多邮箱服务**：MoeMail（自建）、Laoudo、DuckMail、Testmail、Cloudflare Worker 自建邮箱、Freemail、TempMail.lol、Temp-Mail Web
+- **多执行模式**：API 协议（无浏览器）、无头浏览器、有头浏览器（各平台按需支持）
 - **验证码服务**：YesCaptcha、2Captcha、本地 Solver（Camoufox）
 - **代理池管理**：自动轮询、成功率统计、自动禁用失效代理
 - **并发注册**：可配置并发数
@@ -101,13 +101,14 @@ python3 -m camoufox fetch
 .venv\Scripts\python -m uvicorn main:app --port 8000
 ```
 
-浏览器访问 `http://localhost:5173`
+浏览器访问 `http://localhost:8000`
 
 说明：
 
 - 启动入口统一为 `main:app`
 - 后端接口统一位于 `/api/*`
-- 前端默认直接请求 `/api`
+- 生产模式下前端构建产物由后端直接托管，访问 `http://localhost:8000` 即可
+- 开发模式下前端独立运行在 `http://localhost:5173`，通过 Vite 代理转发 API 请求
 - 前后端接口文档见 [docs/frontend-api-contract.md](docs/frontend-api-contract.md)
 - 新的 C 端 / 管理端独立 API 项目见 [customer_portal_api/README.md](customer_portal_api/README.md)
 
@@ -163,6 +164,25 @@ npm run dev
 
 公共临时邮箱服务，无需配置，直接使用。部分地区需要代理。
 
+### TempMail.lol
+
+公共临时邮箱服务，无需配置，自动生成匿名邮箱。
+
+### Temp-Mail Web
+
+基于 web2.temp-mail.org 的临时邮箱服务，无需配置。
+
+### Freemail
+
+基于 Cloudflare Worker 自建的邮箱服务，支持管理员令牌和用户名密码两种认证方式。
+
+| 参数 | 说明 |
+|------|------|
+| API URL | Freemail 服务地址 |
+| 管理员令牌 | 管理员认证令牌 |
+| 用户名 | 可选，用户名密码认证 |
+| 密码 | 可选，用户名密码认证 |
+
 ### Testmail
 
 `testmail.app` 的 namespace 邮箱模式。系统会自动生成地址：
@@ -183,6 +203,7 @@ npm run dev
 | 服务 | 说明 |
 |------|------|
 | YesCaptcha | 需填写 Client Key，在 [yescaptcha.com](https://yescaptcha.com) 注册获取 |
+| 2Captcha | 需填写 API Key，在 [2captcha.com](https://2captcha.com) 注册获取 |
 | 本地 Solver | 使用 Camoufox 本地解码，需先执行 `python3 -m camoufox fetch` |
 
 ## 项目结构
@@ -190,6 +211,9 @@ npm run dev
 ```
 account_manager/
 ├── main.py                 # FastAPI 入口
+├── Dockerfile              # Docker 构建
+├── docker-compose.yml      # Docker Compose 编排
+├── requirements.txt        # Python 依赖
 ├── api/                    # HTTP 路由层
 │   ├── accounts.py         # 账号 CRUD + 导出
 │   ├── account_checks.py   # 账号检测
@@ -200,6 +224,8 @@ account_manager/
 │   ├── config.py           # 配置读写
 │   ├── platforms.py        # 平台列表
 │   ├── platform_capabilities.py
+│   ├── provider_definitions.py  # Provider 定义管理
+│   ├── provider_settings.py     # Provider 配置管理
 │   ├── proxies.py          # 代理管理
 │   ├── health.py           # 健康检查
 │   └── system.py           # Solver 管理
@@ -210,46 +236,160 @@ account_manager/
 │   ├── base_platform.py    # 平台基类
 │   ├── base_mailbox.py     # 邮箱服务基类 + 工厂方法
 │   ├── base_captcha.py     # 验证码服务基类
+│   ├── base_identity.py    # 身份提供者基类
+│   ├── registration/       # 注册流程编排（适配器 + 流程）
 │   ├── db.py               # 数据模型
 │   ├── proxy_pool.py       # 代理池
 │   ├── registry.py         # 平台插件注册表
-│   └── scheduler.py        # 定时任务
+│   ├── scheduler.py        # 定时任务
+│   └── oauth_browser.py    # OAuth 浏览器基类
 ├── platforms/              # 平台插件层
 │   └── {platform}/
-│       ├── plugin.py       # 平台适配层
-│       ├── core.py         # 注册协议核心逻辑
-│       └── switch.py       # 账号切换逻辑
+│       ├── plugin.py           # 平台适配层
+│       ├── protocol_mailbox.py # 协议模式注册
+│       ├── browser_register.py # 浏览器注册（按需）
+│       ├── browser_oauth.py    # 浏览器 OAuth（按需）
+│       ├── core.py             # 平台协议核心逻辑（按需）
+│       └── switch.py           # 账号切换逻辑（按需）
+├── resources/              # 静态配置
+│   ├── platform_capabilities.json
+│   └── provider_driver_templates.json
 ├── services/               # 后台服务
 │   ├── solver_manager.py   # Turnstile Solver 进程管理
 │   └── task_runtime.py     # 持久化任务执行器
+├── customer_portal_api/    # C 端 / 管理端独立 API
+├── electron/               # Electron 桌面端打包
 ├── scripts/
 │   └── smoke.py            # API 冒烟检查
+├── tests/                  # 测试
 └── frontend/               # React 前端
 ```
 
 ## 插件开发
 
-添加新平台只需在 `platforms/` 下新建目录，实现 `plugin.py`：
+添加新平台需要以下步骤：
+
+### 1. 新建平台目录
+
+在 `platforms/` 下新建目录，必须包含 `__init__.py` 和 `plugin.py`（`pkgutil.iter_modules` 只扫描带 `__init__.py` 的 Python 包）：
+
+```
+platforms/myplatform/
+├── __init__.py
+├── plugin.py              # 平台适配层（必须）
+├── protocol_mailbox.py    # 协议模式注册逻辑（按需）
+├── browser_register.py    # 浏览器注册逻辑（按需）
+└── browser_oauth.py       # 浏览器 OAuth 逻辑（按需）
+```
+
+### 2. 实现 plugin.py
 
 ```python
 from core.base_platform import BasePlatform, Account, AccountStatus, RegisterConfig
+from core.base_mailbox import BaseMailbox
+from core.registration import ProtocolMailboxAdapter, OtpSpec, RegistrationResult
 from core.registry import register
+
 
 @register
 class MyPlatform(BasePlatform):
     name = "myplatform"
     display_name = "My Platform"
     version = "1.0.0"
-    supported_executors = ["protocol"]
 
-    def register(self, email: str, password: str = None) -> Account:
-        # 用 self.mailbox.get_email() 获取邮箱
-        # 用 self.mailbox.wait_for_code() 收验证码
-        ...
+    def __init__(self, config: RegisterConfig = None, mailbox: BaseMailbox = None):
+        super().__init__(config)
+        self.mailbox = mailbox
+
+    def build_protocol_mailbox_adapter(self):
+        """协议模式注册适配器"""
+        return ProtocolMailboxAdapter(
+            result_mapper=lambda ctx, result: RegistrationResult(
+                email=result["email"],
+                password=result.get("password", ""),
+                status=AccountStatus.REGISTERED,
+            ),
+            worker_builder=lambda ctx, artifacts: __import__(
+                "platforms.myplatform.protocol_mailbox",
+                fromlist=["MyWorker"],
+            ).MyWorker(proxy=ctx.proxy, log_fn=ctx.log),
+            register_runner=lambda worker, ctx, artifacts: worker.run(
+                email=ctx.identity.email,
+                password=ctx.password,
+                otp_callback=artifacts.otp_callback,
+            ),
+            otp_spec=OtpSpec(wait_message="等待验证码邮件..."),
+        )
 
     def check_valid(self, account: Account) -> bool:
-        ...
+        """检测账号是否有效"""
+        return bool(account.token)
 ```
+
+### 3. 声明平台能力
+
+在 `resources/platform_capabilities.json` 中添加：
+
+```json
+{
+  "myplatform": {
+    "supported_executors": ["protocol"],
+    "supported_identity_modes": ["mailbox"],
+    "supported_oauth_providers": []
+  }
+}
+```
+
+系统启动时会自动扫描 `platforms/` 目录加载所有带 `@register` 装饰器的插件。
+
+## 常见问题
+
+### 验证码失败怎么办？
+
+1. 确认验证码 provider 已正确配置（YesCaptcha Client Key 或本地 Solver）
+2. 协议模式下优先使用远程验证码服务（YesCaptcha / 2Captcha）
+3. 浏览器模式下 Camoufox 会自动尝试点击 Turnstile checkbox，失败时回退到远程 Solver
+4. 如果持续失败，检查代理 IP 质量——高风险 IP 会触发更严格的验证
+
+### 代理被封 / 注册失败率高？
+
+1. 在代理管理页查看各代理的成功率，禁用低成功率代理
+2. 使用住宅代理而非数据中心代理，通过率显著更高
+3. 降低并发数，避免同一 IP 短时间内大量请求
+4. 不同平台对 IP 的敏感度不同，可按平台分配代理池
+
+### 浏览器模式需要什么额外配置？
+
+```bash
+# 安装 Playwright 浏览器
+python3 -m playwright install chromium
+
+# 安装 Camoufox（反指纹浏览器）
+python3 -m camoufox fetch
+```
+
+浏览器模式支持 `headless`（无头）和 `headed`（有头）两种，在注册页的执行器选项中选择即可。
+
+## 参与贡献
+
+欢迎提交 Issue 和 Pull Request。
+
+1. Fork 本仓库
+2. 创建特性分支：`git checkout -b feature/my-feature`
+3. 提交更改：`git commit -m 'feat: add my feature'`
+4. 推送分支：`git push origin feature/my-feature`
+5. 提交 Pull Request
+
+提交规范建议使用 [Conventional Commits](https://www.conventionalcommits.org/)：
+- `feat:` 新功能
+- `fix:` 修复
+- `docs:` 文档
+- `refactor:` 重构
+- `test:` 测试
+
+## 更新日志
+
+详见 [GitHub Releases](https://github.com/lxf746/any-auto-register/releases)。
 
 ## Star History
 
@@ -257,4 +397,4 @@ class MyPlatform(BasePlatform):
 
 ## License
 
-MIT License — 仅供学习研究，禁止商业使用。
+本项目采用 [AGPL-3.0](LICENSE) 许可证。个人学习和研究可自由使用；商业使用需遵守 AGPL-3.0 条款（衍生作品须开源）。
