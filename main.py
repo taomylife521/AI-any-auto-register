@@ -97,6 +97,15 @@ if os.path.isdir(_static_dir):
 
 
 if __name__ == "__main__":
+    import sys
     import uvicorn
+
+    # 当 backend 被自己以 --solver 参数 spawn 时（PyInstaller 打包模式），
+    # 不启动 FastAPI 主服务，而是作为 Turnstile Solver 子进程运行
+    if len(sys.argv) > 1 and sys.argv[1] == "--solver":
+        sys.argv = [sys.argv[0]] + sys.argv[2:]  # 把 --solver 摘掉，让 argparse 看到剩余参数
+        from services.turnstile_solver.start import main as solver_main
+        solver_main()
+        sys.exit(0)
 
     uvicorn.run(app, host="0.0.0.0", port=8000)

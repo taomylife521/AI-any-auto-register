@@ -37,6 +37,7 @@ jobs:
             --add-data "platforms:platforms" \
             --add-data "core:core" \
             --add-data "api:api" \
+            --add-data "services:services" \
             --add-data "static:static" \
             --collect-all browserforge \
             --collect-all camoufox \
@@ -94,6 +95,7 @@ jobs:
             --add-data "platforms;platforms" `
             --add-data "core;core" `
             --add-data "api;api" `
+            --add-data "services;services" `
             --add-data "static;static" `
             --collect-all browserforge `
             --collect-all camoufox `

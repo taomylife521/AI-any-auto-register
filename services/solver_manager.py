@@ -26,14 +26,23 @@ def start():
         if is_running():
             print("[Solver] 已在运行")
             return
-        solver_script = os.path.join(
-            os.path.dirname(__file__), "turnstile_solver", "start.py"
-        )
+        # PyInstaller 打包后 sys.executable 指向 backend 可执行文件，
+        # 用 --solver 参数让它走 solver 入口；源码模式下走 python + start.py
+        if getattr(sys, "frozen", False):
+            cmd = [sys.executable, "--solver",
+                   "--browser_type", "camoufox",
+                   "--thread", "1",
+                   "--port", str(SOLVER_PORT)]
+        else:
+            solver_script = os.path.join(
+                os.path.dirname(__file__), "turnstile_solver", "start.py"
+            )
+            cmd = [sys.executable, solver_script,
+                   "--browser_type", "camoufox",
+                   "--thread", "1",
+                   "--port", str(SOLVER_PORT)]
         _proc = subprocess.Popen(
-            [sys.executable, solver_script,
-             "--browser_type", "camoufox",
-             "--thread", "1",   # 只需要 1 个浏览器，节省资源
-             "--port", str(SOLVER_PORT)],
+            cmd,
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
         )
