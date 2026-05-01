@@ -23,6 +23,8 @@ export type ProviderOption = {
   default_auth_mode?: string
   auth_modes?: Array<{ value: string; label: string }>
   fields: ProviderField[]
+  is_builtin?: boolean
+  category?: string
 }
 
 export type ProviderDriver = {

@@ -19,146 +19,173 @@ _BUILTIN_DEFINITIONS: list[dict] = [
     {
         "provider_type": "mailbox",
         "provider_key": "cfworker_admin_api",
-        "label": "CFWorker 邮箱",
-        "description": "基于 Cloudflare Worker 的自定义域名邮箱服务，需部署 CFWorker 后端并配置 Admin Token",
+        "label": "CF Worker（自建域名）",
+        "description": "基于 Cloudflare Worker 的自定义域名邮箱，需自行部署 Worker 后端",
         "driver_type": "cfworker_admin_api",
         "default_auth_mode": "token",
         "enabled": True,
+        "category": "selfhost",
         "auth_modes": [{"value": "token", "label": "Token 认证"}],
         "fields": [
-            {"key": "cfworker_api_url", "label": "API 地址", "placeholder": "https://your-worker.example.com"},
-            {"key": "cfworker_admin_token", "label": "Admin Token", "secret": True},
-            {"key": "cfworker_domain", "label": "邮箱域名", "placeholder": "example.com"},
-            {"key": "cfworker_fingerprint", "label": "指纹标识 (可选)", "placeholder": ""},
+            {"key": "cfworker_api_url", "label": "API 地址", "placeholder": "https://your-worker.example.com", "category": "connection"},
+            {"key": "cfworker_admin_token", "label": "Admin Token", "secret": True, "category": "auth"},
+            {"key": "cfworker_domain", "label": "邮箱域名", "placeholder": "example.com", "category": "connection"},
+            {"key": "cfworker_fingerprint", "label": "指纹标识（可选）", "placeholder": "", "category": "connection"},
         ],
     },
     {
         "provider_type": "mailbox",
         "provider_key": "moemail_api",
-        "label": "MoeMail 邮箱",
-        "description": "MoeMail 自部署临时邮箱服务，支持自动注册和手动登录",
+        "label": "MoeMail（sall.cc）",
+        "description": "自部署临时邮箱，支持自动注册账号或手动登录已有账号",
         "driver_type": "moemail_api",
         "default_auth_mode": "password",
         "enabled": True,
+        "category": "selfhost",
         "auth_modes": [
             {"value": "password", "label": "账号密码"},
             {"value": "token", "label": "Session Token"},
         ],
         "fields": [
-            {"key": "moemail_api_url", "label": "API 地址", "placeholder": "https://moemail.example.com"},
-            {"key": "moemail_username", "label": "用户名"},
-            {"key": "moemail_password", "label": "密码", "secret": True},
-            {"key": "moemail_session_token", "label": "Session Token (可选)", "secret": True},
+            {"key": "moemail_api_url", "label": "API 地址", "placeholder": "https://moemail.example.com", "category": "connection"},
+            {"key": "moemail_username", "label": "用户名（可选）", "category": "auth"},
+            {"key": "moemail_password", "label": "密码（可选）", "secret": True, "category": "auth"},
+            {"key": "moemail_session_token", "label": "Session Token（可选）", "secret": True, "category": "auth"},
         ],
     },
     {
         "provider_type": "mailbox",
         "provider_key": "tempmail_lol_api",
-        "label": "TempMail.lol 邮箱",
-        "description": "TempMail.lol 免费临时邮箱，无需配置即可使用（自动生成邮箱地址）",
+        "label": "TempMail.lol",
+        "description": "免费临时邮箱，开箱即用，无需任何配置",
         "driver_type": "tempmail_lol_api",
         "default_auth_mode": "",
         "enabled": True,
+        "category": "free",
         "auth_modes": [],
         "fields": [],
     },
     {
         "provider_type": "mailbox",
         "provider_key": "tempmail_web_api",
-        "label": "Temp-Mail.org 邮箱",
-        "description": "基于 temp-mail.org 的临时邮箱服务，无需注册",
+        "label": "Temp-Mail.org",
+        "description": "免费临时邮箱，需要浏览器环境（Camoufox）",
         "driver_type": "tempmail_web_api",
         "default_auth_mode": "",
         "enabled": True,
+        "category": "free",
         "auth_modes": [],
         "fields": [
-            {"key": "tempmail_web_base_url", "label": "API 地址 (可选)", "placeholder": "https://web2.temp-mail.org"},
+            {"key": "tempmail_web_base_url", "label": "API 地址（可选）", "placeholder": "https://web2.temp-mail.org", "category": "connection"},
         ],
     },
     {
         "provider_type": "mailbox",
         "provider_key": "duckmail_api",
-        "label": "DuckMail 邮箱",
-        "description": "DuckMail 自部署邮箱服务，需配置 API 地址和 Bearer Token",
+        "label": "DuckMail（自动生成）",
+        "description": "自部署邮箱服务，通过 API 自动生成临时邮箱",
         "driver_type": "duckmail_api",
         "default_auth_mode": "bearer",
         "enabled": True,
+        "category": "selfhost",
         "auth_modes": [{"value": "bearer", "label": "Bearer Token"}],
         "fields": [
-            {"key": "duckmail_api_url", "label": "API 地址", "placeholder": "https://duckmail.example.com"},
-            {"key": "duckmail_provider_url", "label": "Provider URL (可选)", "placeholder": ""},
-            {"key": "duckmail_bearer", "label": "Bearer Token", "secret": True},
+            {"key": "duckmail_api_url", "label": "API 地址", "placeholder": "https://duckmail.example.com", "category": "connection"},
+            {"key": "duckmail_provider_url", "label": "Provider URL（可选）", "placeholder": "", "category": "connection"},
+            {"key": "duckmail_bearer", "label": "Bearer Token", "secret": True, "category": "auth"},
         ],
     },
     {
         "provider_type": "mailbox",
         "provider_key": "freemail_api",
-        "label": "FreeMail 邮箱",
-        "description": "FreeMail 自部署邮箱服务，需配置 API 地址和管理员 Token",
+        "label": "FreeMail（自动生成）",
+        "description": "自部署邮箱服务，支持账号密码或 Admin Token 认证",
         "driver_type": "freemail_api",
         "default_auth_mode": "password",
         "enabled": True,
+        "category": "selfhost",
         "auth_modes": [{"value": "password", "label": "账号密码"}, {"value": "token", "label": "Admin Token"}],
         "fields": [
-            {"key": "freemail_api_url", "label": "API 地址", "placeholder": "https://freemail.example.com"},
-            {"key": "freemail_admin_token", "label": "Admin Token", "secret": True},
-            {"key": "freemail_username", "label": "用户名"},
-            {"key": "freemail_password", "label": "密码", "secret": True},
+            {"key": "freemail_api_url", "label": "API 地址", "placeholder": "https://freemail.example.com", "category": "connection"},
+            {"key": "freemail_admin_token", "label": "Admin Token", "secret": True, "category": "auth"},
+            {"key": "freemail_username", "label": "用户名", "category": "auth"},
+            {"key": "freemail_password", "label": "密码", "secret": True, "category": "auth"},
         ],
     },
     {
         "provider_type": "mailbox",
         "provider_key": "testmail_api",
-        "label": "Testmail.app 邮箱",
-        "description": "Testmail.app 邮箱服务，通过 API Key 和 Namespace 管理邮箱",
+        "label": "Testmail（namespace 邮箱）",
+        "description": "Testmail.app 第三方服务，通过 API Key 和 Namespace 自动拼接邮箱",
         "driver_type": "testmail_api",
         "default_auth_mode": "apikey",
         "enabled": True,
+        "category": "thirdparty",
         "auth_modes": [{"value": "apikey", "label": "API Key"}],
         "fields": [
-            {"key": "testmail_api_url", "label": "API 地址 (可选)", "placeholder": "https://api.testmail.app"},
-            {"key": "testmail_api_key", "label": "API Key", "secret": True},
-            {"key": "testmail_namespace", "label": "Namespace"},
-            {"key": "testmail_tag_prefix", "label": "Tag 前缀 (可选)", "placeholder": ""},
+            {"key": "testmail_api_url", "label": "API 地址（可选）", "placeholder": "https://api.testmail.app", "category": "connection"},
+            {"key": "testmail_api_key", "label": "API Key", "secret": True, "category": "auth"},
+            {"key": "testmail_namespace", "label": "Namespace", "category": "identity"},
+            {"key": "testmail_tag_prefix", "label": "Tag 前缀（可选）", "placeholder": "", "category": "identity"},
         ],
     },
     {
         "provider_type": "mailbox",
         "provider_key": "laoudo_api",
-        "label": "Laoudo 邮箱",
-        "description": "laoudo.com 邮箱服务，需配置 Auth Token 和邮箱地址",
+        "label": "Laoudo（固定邮箱）",
+        "description": "laoudo.com 固定域名邮箱，使用已有邮箱地址接收验证码",
         "driver_type": "laoudo_api",
         "default_auth_mode": "token",
         "enabled": True,
-        "auth_modes": [{"value": "token", "label": "Token 认证"}],
+        "category": "thirdparty",
+        "auth_modes": [{"value": "token", "label": "JWT Token"}],
         "fields": [
-            {"key": "laoudo_auth", "label": "Auth Token", "secret": True},
-            {"key": "laoudo_email", "label": "邮箱地址", "placeholder": "your@email.com"},
-            {"key": "laoudo_account_id", "label": "Account ID"},
+            {"key": "laoudo_auth", "label": "Auth Token", "secret": True, "category": "auth"},
+            {"key": "laoudo_email", "label": "邮箱地址", "placeholder": "your@email.com", "category": "identity"},
+            {"key": "laoudo_account_id", "label": "Account ID", "category": "identity"},
         ],
     },
     {
         "provider_type": "mailbox",
         "provider_key": "aitre_api",
         "label": "Aitre 临时邮箱",
-        "description": "mail.aitre.cc 临时邮箱服务，需指定固定邮箱地址",
+        "description": "mail.aitre.cc 免费临时邮箱，需指定一个固定邮箱地址",
         "driver_type": "aitre_api",
         "default_auth_mode": "",
         "enabled": True,
+        "category": "free",
         "auth_modes": [],
         "fields": [
-            {"key": "aitre_email", "label": "邮箱地址", "placeholder": "your@email.com"},
-            {"key": "aitre_api_url", "label": "API 地址 (可选)", "placeholder": "https://mail.aitre.cc/api/tempmail"},
+            {"key": "aitre_email", "label": "邮箱地址", "placeholder": "your@email.com", "category": "identity"},
+            {"key": "aitre_api_url", "label": "API 地址（可选）", "placeholder": "https://mail.aitre.cc/api/tempmail", "category": "connection"},
+        ],
+    },
+    {
+        "provider_type": "mailbox",
+        "provider_key": "ddg_email",
+        "label": "DuckDuckGo Email",
+        "description": "DuckDuckGo Email Protection，生成 @duck.com 别名，通过 IMAP 从转发邮箱读取验证码",
+        "driver_type": "ddg_email",
+        "default_auth_mode": "bearer",
+        "enabled": True,
+        "category": "thirdparty",
+        "auth_modes": [{"value": "bearer", "label": "Bearer Token"}],
+        "fields": [
+            {"key": "ddg_bearer", "label": "DDG Bearer Token", "secret": True, "category": "auth"},
+            {"key": "ddg_imap_host", "label": "IMAP 服务器（可选）", "placeholder": "自动推断", "category": "connection"},
+            {"key": "ddg_imap_user", "label": "IMAP 用户名（转发邮箱）", "placeholder": "your@gmail.com", "category": "auth"},
+            {"key": "ddg_imap_pass", "label": "IMAP 密码", "secret": True, "category": "auth"},
         ],
     },
     {
         "provider_type": "mailbox",
         "provider_key": "generic_http_mailbox",
         "label": "通用 HTTP 邮箱",
-        "description": "数据驱动的通用 HTTP 邮箱驱动，所有端点和认证通过配置描述，零代码新增邮箱类型",
+        "description": "通过配置 HTTP 端点和认证方式对接任意邮箱 API，适合高级用户",
         "driver_type": "generic_http_mailbox",
         "default_auth_mode": "",
         "enabled": True,
+        "category": "custom",
         "auth_modes": [],
         "fields": [],
     },
@@ -171,6 +198,7 @@ _BUILTIN_DEFINITIONS: list[dict] = [
         "driver_type": "yescaptcha_api",
         "default_auth_mode": "apikey",
         "enabled": True,
+        "category": "thirdparty",
         "auth_modes": [{"value": "apikey", "label": "API Key"}],
         "fields": [
             {"key": "yescaptcha_key", "label": "Client Key", "secret": True},
@@ -184,6 +212,7 @@ _BUILTIN_DEFINITIONS: list[dict] = [
         "driver_type": "twocaptcha_api",
         "default_auth_mode": "apikey",
         "enabled": True,
+        "category": "thirdparty",
         "auth_modes": [{"value": "apikey", "label": "API Key"}],
         "fields": [
             {"key": "twocaptcha_key", "label": "API Key", "secret": True},
@@ -197,6 +226,7 @@ _BUILTIN_DEFINITIONS: list[dict] = [
         "driver_type": "local_solver",
         "default_auth_mode": "",
         "enabled": True,
+        "category": "thirdparty",
         "auth_modes": [],
         "fields": [
             {"key": "solver_url", "label": "Solver 地址", "placeholder": "http://localhost:8889"},
@@ -210,6 +240,7 @@ _BUILTIN_DEFINITIONS: list[dict] = [
         "driver_type": "manual",
         "default_auth_mode": "",
         "enabled": True,
+        "category": "thirdparty",
         "auth_modes": [],
         "fields": [],
     },
@@ -222,6 +253,7 @@ _BUILTIN_DEFINITIONS: list[dict] = [
         "driver_type": "herosms_api",
         "default_auth_mode": "apikey",
         "enabled": True,
+        "category": "thirdparty",
         "auth_modes": [{"value": "apikey", "label": "API Key"}],
         "fields": [
             {"key": "herosms_api_key", "label": "API Key", "secret": True},
@@ -240,6 +272,7 @@ _BUILTIN_DEFINITIONS: list[dict] = [
         "driver_type": "sms_activate_api",
         "default_auth_mode": "apikey",
         "enabled": True,
+        "category": "thirdparty",
         "auth_modes": [{"value": "apikey", "label": "API Key"}],
         "fields": [
             {"key": "sms_activate_api_key", "label": "API Key", "secret": True},
@@ -255,6 +288,7 @@ _BUILTIN_DEFINITIONS: list[dict] = [
         "driver_type": "api_extract",
         "default_auth_mode": "",
         "enabled": False,
+        "category": "thirdparty",
         "auth_modes": [],
         "fields": [
             {"key": "proxy_api_url", "label": "API 地址", "placeholder": "https://provider.com/api/get_proxy?key=xxx"},
@@ -271,6 +305,7 @@ _BUILTIN_DEFINITIONS: list[dict] = [
         "driver_type": "rotating_gateway",
         "default_auth_mode": "",
         "enabled": False,
+        "category": "thirdparty",
         "auth_modes": [],
         "fields": [
             {"key": "proxy_gateway_url", "label": "网关地址", "placeholder": "http://user:pass@gate.example.com:7777"},
@@ -282,36 +317,47 @@ _BUILTIN_DEFINITIONS: list[dict] = [
 class ProviderDefinitionsRepository:
 
     def ensure_seeded(self) -> None:
-        """将内置 provider definition 种子数据写入数据库（仅插入不更新）。"""
+        """将内置 provider definition 种子数据写入数据库。
+
+        新增的插入，已存在的更新字段定义（label、description、fields 等），
+        确保代码升级后内置 provider 的元数据能同步到数据库。
+        """
         with Session(engine) as session:
-            existing_keys: set[str] = set()
+            existing: dict[str, ProviderDefinitionModel] = {}
             for row in session.exec(select(ProviderDefinitionModel)).all():
                 key = f"{row.provider_type}::{row.provider_key}"
-                existing_keys.add(key)
+                existing[key] = row
 
             changed = False
             for seed in _BUILTIN_DEFINITIONS:
                 key = f"{seed['provider_type']}::{seed['provider_key']}"
-                if key in existing_keys:
-                    continue
-                item = ProviderDefinitionModel(
-                    provider_type=seed["provider_type"],
-                    provider_key=seed["provider_key"],
-                    label=seed.get("label", seed["provider_key"]),
-                    description=seed.get("description", ""),
-                    driver_type=seed.get("driver_type", seed["provider_key"]),
-                    default_auth_mode=seed.get("default_auth_mode", ""),
-                    enabled=seed.get("enabled", True),
-                    is_builtin=True,
-                    created_at=_utcnow(),
-                    updated_at=_utcnow(),
-                )
+                item = existing.get(key)
+
+                if item is None:
+                    # 新增
+                    item = ProviderDefinitionModel(
+                        provider_type=seed["provider_type"],
+                        provider_key=seed["provider_key"],
+                        created_at=_utcnow(),
+                    )
+                    logger.info("种子数据: 新增 %s/%s", seed["provider_type"], seed["provider_key"])
+
+                # 更新元数据（每次启动都同步，确保代码变更生效）
+                item.label = seed.get("label", seed["provider_key"])
+                item.description = seed.get("description", "")
+                item.driver_type = seed.get("driver_type", seed["provider_key"])
+                item.default_auth_mode = seed.get("default_auth_mode", "")
+                item.enabled = seed.get("enabled", True)
+                item.is_builtin = True
+                item.category = seed.get("category", "")
                 item.set_auth_modes(list(seed.get("auth_modes") or []))
                 item.set_fields(list(seed.get("fields") or []))
-                item.set_metadata(dict(seed.get("metadata") or {}))
+                if not item.get_metadata():
+                    # 只在 metadata 为空时写入种子值，避免覆盖用户自定义的 pipeline
+                    item.set_metadata(dict(seed.get("metadata") or {}))
+                item.updated_at = _utcnow()
                 session.add(item)
                 changed = True
-                logger.info("种子数据: 新增 provider definition %s/%s", seed["provider_type"], seed["provider_key"])
 
             if changed:
                 session.commit()

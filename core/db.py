@@ -143,6 +143,7 @@ class ProviderDefinitionModel(SQLModel, table=True):
     default_auth_mode: str = ""
     enabled: bool = True
     is_builtin: bool = False
+    category: str = ""  # "free" | "selfhost" | "custom"
     auth_modes_json: str = "[]"
     fields_json: str = "[]"
     metadata_json: str = "{}"
@@ -432,6 +433,7 @@ def init_db():
     from infrastructure.provider_definitions_repository import ProviderDefinitionsRepository
 
     _migrate_legacy_accounts_schema()
+    _ensure_column("provider_definitions", "category", "TEXT DEFAULT ''")
     SQLModel.metadata.create_all(engine)
 
     with Session(engine) as session:
@@ -441,6 +443,20 @@ def init_db():
         _cleanup_empty_provider_settings()
         sync_all_account_graphs(session)
         session.commit()
+
+
+def _ensure_column(table: str, column: str, col_type: str):
+    """给已有表安全地加一列（SQLite 不支持 IF NOT EXISTS ADD COLUMN）。"""
+    inspector = inspect(engine)
+    tables = set(inspector.get_table_names())
+    if table not in tables:
+        return
+    existing = {c["name"] for c in inspector.get_columns(table)}
+    if column in existing:
+        return
+    with engine.begin() as conn:
+        conn.exec_driver_sql(f"ALTER TABLE {table} ADD COLUMN {column} {col_type}")
+    print(f"[DB] 已添加列 {table}.{column}")
 
 
 def _cleanup_empty_provider_settings():
@@ -475,6 +491,12 @@ _LEGACY_PROVIDER_KEY_MAP: dict[tuple[str, str], str] = {
     ("mailbox", "cfworker"): "cfworker_admin_api",
     ("mailbox", "testmail"): "testmail_api",
     ("mailbox", "laoudo"): "laoudo_api",
+    # sms
+    ("sms", "sms_activate"): "sms_activate_api",
+    ("sms", "herosms"): "herosms_api",
+    # captcha
+    ("captcha", "yescaptcha"): "yescaptcha_api",
+    ("captcha", "twocaptcha"): "twocaptcha_api",
 }
 
 # 旧版 auth_mode 值 → 新版 auth_mode 值映射

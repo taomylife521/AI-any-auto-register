@@ -47,6 +47,7 @@ class ProviderDefinitionsService:
             "auth_modes": item.get_auth_modes(),
             "fields": item.get_fields(),
             "enabled": bool(item.enabled),
-            "is_builtin": bool(item.is_builtin),
+            "is_builtin": bool(getattr(item, "is_builtin", False)),
+            "category": str(getattr(item, "category", "") or ""),
             "metadata": item.get_metadata(),
         }

@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
 import { Save, Eye, EyeOff, Mail, Shield, Cpu, Sliders, Plus, X, Orbit, Package2, MessageSquare } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import ProviderCards from '@/components/settings/ProviderCards'
 
 const PROVIDER_TYPES = ['mailbox', 'captcha', 'sms'] as const
 
@@ -371,6 +372,9 @@ function ProviderField({ field, value, onChange, showSecret, setShowSecret, secr
               onChange={e => onChange(e.target.value)}
               disabled={disabled}
               placeholder={placeholder}
+              autoComplete="new-password"
+              data-1p-ignore
+              data-lpignore="true"
               className="control-surface pr-10 disabled:opacity-70"
             />
             {secret && (
@@ -824,7 +828,7 @@ export default function Settings({ embedded, defaultTab }: { embedded?: boolean;
   const [saved, setSaved] = useState(false)
   const [providerSaving, setProviderSaving] = useState<Record<string, boolean>>({})
   const [providerSaved, setProviderSaved] = useState<Record<string, boolean>>({})
-  const [providerDeleting, setProviderDeleting] = useState<Record<string, boolean>>({})
+  const [_providerDeleting, _setProviderDeleting] = useState<Record<string, boolean>>({})
   const [providerCreating, setProviderCreating] = useState<Record<string, boolean>>({})
   const [solverRunning] = useState<boolean | null>(null)
 
@@ -1008,24 +1012,6 @@ export default function Settings({ embedded, defaultTab }: { embedded?: boolean;
     })
   }
 
-  const markProviderDefault = (providerType: ProviderType, providerKey: string) => {
-    setProviderSettings(current => ({
-      ...current,
-      [providerType]: current[providerType].map(item => ({
-        ...item,
-        is_default: item.provider_key === providerKey,
-      })),
-    }))
-  }
-
-  const persistProviderDefault = async (providerType: ProviderType, item: ProviderSetting) => {
-    markProviderDefault(providerType, item.provider_key)
-    await saveProviderSetting(providerType, {
-      ...item,
-      is_default: true,
-    })
-  }
-
   const saveProviderSetting = async (providerType: ProviderType, item: ProviderSetting) => {
     const stateKey = `${providerType}:${item.provider_key}`
     setProviderSaving(current => ({ ...current, [stateKey]: true }))
@@ -1159,28 +1145,9 @@ export default function Settings({ embedded, defaultTab }: { embedded?: boolean;
     }
   }
 
-  const deleteProviderSetting = async (providerType: ProviderType, item: ProviderSetting) => {
-    const stateKey = `${providerType}:${item.provider_key}`
-    setProviderDeleting(current => ({ ...current, [stateKey]: true }))
-    setProviderError(current => ({ ...current, [providerType]: '' }))
-    try {
-      await apiFetch(`/provider-settings/${item.id}`, { method: 'DELETE' })
-      invalidateConfigOptionsCache()
-      await loadConfigData()
-      setProviderNotice(current => ({ ...current, [providerType]: `已删除 ${item.catalog_label || item.provider_key}` }))
-    } catch (error) {
-      setProviderError(current => ({ ...current, [providerType]: getErrorMessage(error, '删除 provider 失败') }))
-    } finally {
-      setProviderDeleting(current => ({ ...current, [stateKey]: false }))
-    }
-  }
-
   const dialogItem = providerDialog.providerType
     ? providerSettings[providerDialog.providerType].find(item => item.provider_key === providerDialog.providerKey) || null
     : null
-  const openProviderDialog = (providerType: ProviderType, providerKey: string, readOnly: boolean) => {
-    setProviderDialog({ providerType, providerKey, readOnly })
-  }
 
   const mailboxCount = providerSettings.mailbox.length
   const captchaCount = providerSettings.captcha.length
@@ -1191,8 +1158,8 @@ export default function Settings({ embedded, defaultTab }: { embedded?: boolean;
 
   const renderProviderPanel = (providerType: ProviderType) => {
     const meta = PROVIDER_META[providerType]
+    const catalog = providerCatalogs[providerType] || []
     const settings = providerSettings[providerType]
-    const availableProviders = unusedProviders[providerType]
 
     return (
       <>
@@ -1211,7 +1178,7 @@ export default function Settings({ embedded, defaultTab }: { embedded?: boolean;
             {providerNotice[providerType]}
           </div>
         )}
-        <div className={meta.usageHintClassName}>
+        <div className="rounded-lg border border-[var(--accent-edge)] bg-[var(--accent-soft)] px-4 py-3 text-sm text-[var(--text-secondary)]">
           {meta.usageHint}
         </div>
         {providerType === 'captcha' && (
@@ -1223,84 +1190,30 @@ export default function Settings({ embedded, defaultTab }: { embedded?: boolean;
             <div className="text-sm text-[var(--text-secondary)] mt-2">{getCaptchaStrategyLabel('headless', configOptions.captcha_policy, configOptions.captcha_providers)}</div>
           </div>
         )}
-        <div className="rounded-xl border border-[var(--border)] bg-[var(--bg-card)] p-5 space-y-4">
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div>
-              <h3 className="text-sm font-semibold text-[var(--text-primary)]">{meta.listTitle}</h3>
-              <p className="text-xs text-[var(--text-muted)] mt-0.5">{meta.listDescription(settings.length)}</p>
-            </div>
-            <div className="flex items-center gap-3">
-              {availableProviders.length === 0 ? (
-                <span className="text-xs text-[var(--text-muted)]">{meta.noAvailableText}</span>
-              ) : (
-                <span className="text-xs text-[var(--text-muted)]">{meta.availableText(availableProviders.length)}</span>
-              )}
-              <Button size="sm" variant="outline" onClick={() => setProviderCreateDialog(providerType)}>
-                <Plus className="h-3.5 w-3.5 mr-1" />
-                新建动态 Provider
-              </Button>
-              <Button size="sm" onClick={() => setProviderAddDialog(providerType)}>
-                <Plus className="h-3.5 w-3.5 mr-1" />
-                新增 Provider
-              </Button>
-            </div>
-          </div>
-          {settings.length === 0 ? (
-            <div className="empty-state-panel">
-              {meta.emptyText}
-            </div>
-          ) : (
-            <div className="glass-table-wrap rounded-xl border border-[var(--border)]">
-              <table className="w-full min-w-[980px] text-sm">
-                <thead>
-                  <tr className="border-b border-[var(--border)] bg-[var(--bg-hover)] text-xs text-[var(--text-muted)]">
-                    <th className="px-4 py-3 text-left">名称</th>
-                    <th className="px-4 py-3 text-left">Provider Key</th>
-                    <th className="px-4 py-3 text-left">认证方式</th>
-                    <th className="px-4 py-3 text-left">默认</th>
-                    <th className="px-4 py-3 text-left">操作</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {settings.map(provider => {
-                    const stateKey = `${providerType}:${provider.provider_key}`
-                    return (
-                      <tr key={provider.provider_key} className="border-b border-[var(--border)]/50 hover:bg-[var(--bg-hover)]/60 transition-colors">
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          <span className="font-medium text-[var(--text-primary)]">{provider.display_name || provider.catalog_label}</span>
-                          {provider.display_name && provider.display_name !== provider.catalog_label ? (
-                            <span className="ml-2 text-[11px] text-[var(--text-muted)]">({provider.catalog_label})</span>
-                          ) : null}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap text-[var(--text-secondary)]">{provider.provider_key}</td>
-                        <td className="px-4 py-3 whitespace-nowrap text-[var(--text-secondary)]">{provider.auth_modes.find(mode => mode.value === provider.auth_mode)?.label || provider.auth_mode || '-'}</td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          {provider.is_default ? <span className="inline-flex rounded-full bg-emerald-500/15 px-2 py-0.5 text-[11px] text-emerald-300">默认</span> : <span className="text-[var(--text-muted)]">-</span>}
-                        </td>
-                        <td className="px-4 py-3 whitespace-nowrap">
-                          <div className="flex items-center gap-2">
-                            <button onClick={() => openProviderDialog(providerType, provider.provider_key, true)} className="table-action-btn">详情</button>
-                            <button onClick={() => openProviderDialog(providerType, provider.provider_key, false)} className="table-action-btn">编辑</button>
-                            <button onClick={() => persistProviderDefault(providerType, provider)} className="table-action-btn">
-                              {provider.is_default ? '当前默认' : '设默认'}
-                            </button>
-                            <button
-                              onClick={() => deleteProviderSetting(providerType, provider)}
-                              disabled={providerDeleting[stateKey]}
-                              className="table-action-btn table-action-btn-danger"
-                            >
-                              {providerDeleting[stateKey] ? '删除中...' : '删除'}
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
+        <ProviderCards
+          providerType={providerType}
+          catalog={catalog}
+          settings={settings}
+          onReload={loadConfigData}
+          onCreateCustom={() => {
+            // Reset form before opening
+            const drivers = providerDrivers[providerType] || []
+            const firstDriver = drivers[0]
+            setProviderDefinitionForm(current => ({
+              ...current,
+              [providerType]: {
+                provider_key: '',
+                label: '',
+                description: '',
+                driver_type: firstDriver?.driver_type || '',
+                auth_mode: firstDriver?.default_auth_mode || firstDriver?.auth_modes?.[0]?.value || '',
+                config: {},
+                auth: {},
+              },
+            }))
+            setProviderCreateDialog(providerType)
+          }}
+        />
       </>
     )
   }

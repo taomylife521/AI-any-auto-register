@@ -68,6 +68,8 @@ class ProviderSettingsService:
             "auth_modes": auth_modes,
             "enabled": bool(item.enabled),
             "is_default": bool(item.is_default),
+            "is_builtin": bool(getattr(definition, "is_builtin", False)) if definition else False,
+            "category": str(getattr(definition, "category", "") or "") if definition else "",
             "fields": fields,
             "config": item.get_config(),
             "auth": auth,
